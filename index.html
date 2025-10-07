@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Meu Pressupost Auditiu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0D1117; /* GitHub Dark */
+            color: #C9D1D9;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .game-container {
+            background-color: #161B22;
+            border: 1px solid #30363D;
+        }
+        .budget-bar-gradient {
+            background: linear-gradient(90deg, #1f7842, #34d399); /* Green */
+            box-shadow: 0 0 10px #34d399;
+            transition: width 0.5s ease-in-out;
+        }
+        .fun-bar-gradient {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Blue */
+            box-shadow: 0 0 10px #60a5fa;
+            transition: width 0.5s ease-in-out;
+        }
+        .activity-card {
+            background-color: #0D1117;
+            border: 1px solid #30363D;
+            transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+        }
+        .modal {
+            background-color: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .time-slot.active {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .objective-card {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+        .text-glow-green { text-shadow: 0 0 8px #34d399; }
+        .text-glow-blue { text-shadow: 0 0 8px #60a5fa; }
+        .text-glow-red { text-shadow: 0 0 8px #ef4444; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="game-container w-full max-w-6xl mx-auto rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 hidden">
+
+        <!-- Header -->
+        <header class="space-y-4">
+            <div class="flex justify-between items-center">
+                <div class="text-left">
+                    <h1 class="text-3xl font-bold text-white">Pressupost Auditiu</h1>
+                    <p class="text-slate-400">Gestiona la teva setmana</p>
+                </div>
+                <div id="objective-tracker" class="text-right bg-gray-800 px-4 py-2 rounded-lg border border-gray-700">
+                    <p class="font-mono text-lg text-amber-400">Objectiu <span id="current-objective-num">1</span>/5</p>
+                </div>
+            </div>
+             <!-- Objectiu del Dia -->
+            <div id="daily-goal" class="text-center bg-amber-900/50 border-l-4 border-amber-500 text-amber-300 p-4 rounded-r-lg">
+                <p><strong class="font-bold">Objectiu del Dia:</strong> <span id="goal-text"></span></p>
+            </div>
+            <div class="space-y-3 pt-2">
+                <!-- Barra de Salut Auditiva -->
+                <div>
+                    <div class="flex justify-between items-center mb-1 font-mono">
+                        <span class="text-sm font-semibold text-slate-300">SALUT AUDITIVA</span>
+                        <span id="budget-percentage" class="text-lg font-bold text-green-400 text-glow-green">100.00</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden border border-slate-700">
+                        <div id="budget-bar" class="budget-bar-gradient h-full rounded-full" style="width: 100%;"></div>
+                    </div>
+                </div>
+                 <!-- Barra de Diversió -->
+                <div>
+                    <div class="flex justify-between items-center mb-1 font-mono">
+                        <span class="text-sm font-semibold text-slate-300">NIVELL DE DIVERSIÓ</span>
+                        <span id="fun-percentage" class="text-lg font-bold text-blue-400 text-glow-blue">0.00</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden border border-slate-700">
+                        <div id="fun-bar" class="fun-bar-gradient h-full rounded-full" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Contingut Principal del Joc -->
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Columna 1: Planificador del Dia -->
+            <div class="md:col-span-1 bg-black/20 p-4 rounded-xl border border-slate-700 space-y-2">
+                <h2 class="text-xl font-bold text-center text-slate-300 mb-2">Agenda del Dia <span id="day-counter">1</span></h2>
+                <div id="schedule-matí" class="time-slot p-3 border-l-4 border-slate-700 rounded-r-lg space-y-1 active">
+                    <h3 class="font-bold text-indigo-400">☀️ Matí</h3>
+                    <p class="text-slate-400 text-sm">Tria una activitat...</p>
+                </div>
+                <div id="schedule-migdia" class="time-slot p-3 border-l-4 border-slate-700 rounded-r-lg space-y-1">
+                    <h3 class="font-bold text-yellow-400">🏙️ Migdia</h3>
+                    <p class="text-slate-400 text-sm">Esperant...</p>
+                </div>
+                <div id="schedule-tarda" class="time-slot p-3 border-l-4 border-slate-700 rounded-r-lg space-y-1">
+                    <h3 class="font-bold text-orange-400">🌤️ Tarda</h3>
+                    <p class="text-slate-400 text-sm">Esperant...</p>
+                </div>
+                <div id="schedule-vespre" class="time-slot p-3 border-l-4 border-slate-700 rounded-r-lg space-y-1">
+                    <h3 class="font-bold text-purple-400">🌇 Vespre</h3>
+                    <p class="text-slate-400 text-sm">Esperant...</p>
+                </div>
+                <div id="schedule-nit" class="time-slot p-3 border-l-4 border-slate-700 rounded-r-lg space-y-1">
+                    <h3 class="font-bold text-blue-400">🌙 Nit</h3>
+                    <p class="text-slate-400 text-sm">Esperant...</p>
+                </div>
+            </div>
+            
+            <!-- Columna 2: Activitats Disponibles -->
+            <div id="activities-panel" class="md:col-span-2 space-y-4">
+                <h2 id="activities-title" class="text-2xl font-bold text-center text-slate-300">Activitats del Matí</h2>
+                <div id="activities-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Les cartes d'activitat es generaran aquí -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="instructions-modal" class="modal fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 max-w-lg w-full text-center p-8 rounded-2xl shadow-2xl space-y-4">
+            <h2 class="text-3xl font-bold text-amber-400">Benvingut a Pressupost Auditiu!</h2>
+            <p class="text-slate-400 text-lg">El teu objectiu és sobreviure a una setmana de 5 dies complint un objectiu diari. Gestiona la teva <span class="text-green-400 font-bold">Salut Auditiva</span> per no arribar a zero, i intenta aconseguir el màxim de <span class="text-blue-400 font-bold">Diversió</span> possible. Planifica amb cura! Bona sort.</p>
+            <button id="start-game-button" class="w-full py-3 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors">Començar Setmana</button>
+        </div>
+    </div>
+
+    <div id="day-end-modal" class="modal fixed inset-0 items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 max-w-lg w-full text-center p-8 rounded-2xl shadow-2xl space-y-4">
+            <h2 id="day-end-title" class="text-3xl font-bold text-green-400">Dia Completat!</h2>
+            <p id="day-end-message" class="text-slate-400 text-lg">Les teves orelles han descansat. Has recuperat un <span class="font-bold text-green-400 text-glow-green">+10</span> de salut auditiva. Prepara't per al següent dia!</p>
+            <button id="continue-day-button" class="w-full py-3 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors">Continuar</button>
+        </div>
+    </div>
+    
+    <div id="end-game-modal" class="modal fixed inset-0 items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 max-w-lg w-full text-center p-8 rounded-2xl shadow-2xl space-y-4">
+            <h2 id="end-game-title" class="text-3xl font-bold"></h2>
+            <p id="end-game-message" class="text-slate-400 text-lg"></p>
+            <div class="text-left bg-black/30 p-4 rounded-lg">
+                <h4 class="font-bold mb-2 text-slate-300">Resum de la Setmana:</h4>
+                <div id="end-game-summary" class="space-y-2 text-slate-400"></div>
+            </div>
+            <button id="restart-button" class="w-full py-3 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors">Començar Nova Setmana</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const allActivities = {
+            matí: [
+                { id: 'm1', name: 'Anar a l\'institut en bus', cost: 15, diversio: 5, description: 'El soroll del motor i del trànsit.' },
+                { id: 'm2', name: 'Escoltar música caminant', cost: 20, diversio: 15, description: 'Volum alt per sobre del soroll del carrer.' },
+                { id: 'm3', name: 'Classe tranquil·la', cost: 5, diversio: 2, description: 'Un ambient silenciós i controlat.' },
+            ],
+            migdia: [
+                { id: 'd1', name: 'Dinar a la cantina', cost: 15, diversio: 10, description: 'Molta gent parlant alhora.'},
+                { id: 'd2', name: 'Jugar a bàsquet al pati', cost: 10, diversio: 15, description: 'Crits, pilotes i activitat.'},
+                { id: 'd3', name: 'Repassar apunts en silenci', cost: 0, diversio: 1, description: 'Concentració i calma.'},
+            ],
+            tarda: [
+                { id: 't1', name: 'Assajar amb la banda', cost: 40, diversio: 35, description: 'Volum molt alt i espai tancat.' },
+                { id: 't2', name: 'Jugar a videojocs', cost: 25, diversio: 25, description: 'Explosions i efectes de so forts.' },
+                { id: 't3', name: 'Estudiar per a l\'examen', cost: 0, diversio: 0, description: 'Un merescut descans per les orelles.' },
+            ],
+            vespre: [
+                { id: 'v1', name: 'Anar al cinema (estrena)', cost: 35, diversio: 30, description: 'Sistemes de so molt potents.' },
+                { id: 'v2', name: 'Sopar tranquil amb la família', cost: 5, diversio: 10, description: 'Una conversa relaxada.'},
+                { id: 'v3', name: 'Mirar xarxes socials', cost: 15, diversio: 15, description: 'Una estona de desconnexió amb so.' },
+            ],
+            nit: [
+                { id: 'n1', name: 'Anar a un concert', cost: 50, diversio: 50, description: 'L\'activitat més sorollosa i perillosa.' },
+                { id: 'n2', name: 'Sortir de festa', cost: 45, diversio: 40, description: 'Música alta durant hores.' },
+                { id: 'n3', name: 'Llegir abans de dormir', cost: 0, diversio: 5, description: 'Relaxació total i silenci.' },
+            ]
+        };
+        
+        const dailyGoals = [
+            { id: 'g1', text: 'Has d\'estudiar per a l\'examen de demà.', requiredActivityId: 't3' },
+            { id: 'g2', text: 'És l\'aniversari del teu amic! Toca anar al concert.', requiredActivityId: 'n1' },
+            { id: 'g3', text: 'Has quedat per assajar amb la teva banda.', requiredActivityId: 't1' },
+            { id: 'g4', text: 'S\'estrena la pel·lícula que esperaves. Toca anar al cinema!', requiredActivityId: 'v1' },
+            { id: 'g5', text: 'Els teus amics han organitzat una gran festa aquesta nit.', requiredActivityId: 'n2' }
+        ];
+
+        // DOM Elements
+        const gameContainer = document.getElementById('game-container');
+        const instructionsModal = document.getElementById('instructions-modal');
+        const dayEndModal = document.getElementById('day-end-modal');
+        const startGameButton = document.getElementById('start-game-button');
+        const continueDayButton = document.getElementById('continue-day-button');
+        const dayEndTitle = document.getElementById('day-end-title');
+
+        const budgetBar = document.getElementById('budget-bar'), funBar = document.getElementById('fun-bar');
+        const budgetPercentage = document.getElementById('budget-percentage'), funPercentage = document.getElementById('fun-percentage');
+        const activitiesContainer = document.getElementById('activities-container'), activitiesTitle = document.getElementById('activities-title');
+        const endGameModal = document.getElementById('end-game-modal'), endGameTitle = document.getElementById('end-game-title');
+        const endGameMessage = document.getElementById('end-game-message'), endGameSummary = document.getElementById('end-game-summary');
+        const restartButton = document.getElementById('restart-button'), goalText = document.getElementById('goal-text');
+        const currentObjectiveNum = document.getElementById('current-objective-num'), dayCounter = document.getElementById('day-counter');
+
+        let budget, fun, timeOfDay, schedule, currentGoal, shuffledGoals, currentDayIndex, weeklySummary;
+        
+        function initGame() {
+            gameContainer.classList.add('hidden');
+            endGameModal.classList.add('hidden');
+            endGameModal.classList.remove('flex');
+            instructionsModal.classList.remove('hidden');
+            instructionsModal.classList.add('flex');
+        }
+        
+        function startGameWeek() {
+            instructionsModal.classList.add('hidden');
+            instructionsModal.classList.remove('flex');
+            gameContainer.classList.remove('hidden');
+
+            budget = 100;
+            fun = 0;
+            currentDayIndex = 0;
+            shuffledGoals = [...dailyGoals].sort(() => 0.5 - Math.random());
+            weeklySummary = [];
+            startDay();
+            endGameModal.classList.add('hidden');
+            endGameModal.classList.remove('flex');
+        }
+
+        function startDay() {
+            timeOfDay = 'matí';
+            schedule = { matí: null, migdia: null, tarda: null, vespre: null, nit: null };
+            currentGoal = shuffledGoals[currentDayIndex];
+            goalText.textContent = currentGoal.text;
+            currentObjectiveNum.textContent = currentDayIndex + 1;
+            dayCounter.textContent = currentDayIndex + 1;
+            updateAllDisplays();
+        }
+
+        function renderActivities() {
+            activitiesContainer.innerHTML = '';
+            
+            let goalActivityTime = Object.keys(allActivities).find(time => allActivities[time].some(act => act.id === currentGoal.requiredActivityId));
+            const activitiesToShow = (timeOfDay === goalActivityTime)
+                ? [allActivities[timeOfDay].find(act => act.id === currentGoal.requiredActivityId)]
+                : [...allActivities[timeOfDay]];
+
+            activitiesTitle.textContent = `Activitats de ${timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)}`;
+            
+            activitiesToShow.forEach(activity => {
+                const card = document.createElement('div');
+                card.className = 'activity-card p-4 rounded-lg shadow-md cursor-pointer';
+                if (activity.id === currentGoal.requiredActivityId) card.classList.add('objective-card');
+                
+                card.innerHTML = `
+                    <h4 class="font-bold text-slate-100">${activity.name}</h4>
+                    <p class="text-sm text-slate-400">${activity.description}</p>
+                    <div class="flex justify-between items-center mt-2 font-mono">
+                        <p class="text-sm font-bold text-red-400 text-glow-red">-${activity.cost.toFixed(0)} Salut</p>
+                        <p class="text-sm font-bold text-blue-400 text-glow-blue">+${activity.diversio.toFixed(0)} Diversió</p>
+                    </div>
+                `;
+                card.onclick = () => selectActivity(activity);
+                activitiesContainer.appendChild(card);
+            });
+        }
+        
+        function selectActivity(activity) {
+            if (budget - activity.cost < 0) {
+                 endGame(false);
+                 return;
+            }
+            budget -= activity.cost;
+            fun += activity.diversio;
+            schedule[timeOfDay] = { ...activity, finalCost: activity.cost };
+            progressDay();
+        }
+
+        function progressDay() {
+            const timeSlots = ['matí', 'migdia', 'tarda', 'vespre', 'nit'];
+            const currentIndex = timeSlots.indexOf(timeOfDay);
+            if (currentIndex < timeSlots.length - 1) {
+                timeOfDay = timeSlots[currentIndex + 1];
+                updateAllDisplays();
+            } else {
+                weeklySummary.push({ day: currentDayIndex + 1, goal: currentGoal.text, budget: budget, fun: fun });
+                currentDayIndex++;
+                if (currentDayIndex < shuffledGoals.length) {
+                    showDayEndPopup();
+                } else {
+                    endGame(true);
+                }
+            }
+        }
+        
+        function showDayEndPopup() {
+            budget = Math.min(100, budget + 10);
+            dayEndTitle.textContent = `Fi del Dia ${currentDayIndex}`;
+            dayEndModal.classList.remove('hidden');
+            dayEndModal.classList.add('flex');
+            updateBudgetDisplay();
+        }
+
+        function updateAllDisplays() {
+            updateBudgetDisplay();
+            updateFunDisplay();
+            renderActivities();
+            updateScheduleDisplay();
+        }
+
+        function updateBudgetDisplay() {
+            const percentage = Math.max(0, budget);
+            budgetBar.style.width = `${percentage}%`;
+            budgetPercentage.textContent = `${percentage.toFixed(2)}`;
+        }
+        
+        function updateFunDisplay() {
+            const MAX_FUN_DAY = 100;
+            const percentage = Math.min(100, (fun / (MAX_FUN_DAY * (currentDayIndex+1))) * 100);
+            funBar.style.width = `${percentage}%`;
+            funPercentage.textContent = `${fun.toFixed(2)}`;
+        }
+
+        function updateScheduleDisplay() {
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('active');
+                const timeName = slot.id.split('-')[1];
+                const activity = schedule[timeName];
+                 const emoji = slot.querySelector('h3').textContent.split(' ')[0];
+                if (!activity) {
+                     slot.innerHTML = `
+                        <h3 class="font-bold">${emoji} ${timeName.charAt(0).toUpperCase() + timeName.slice(1)}</h3>
+                        <p class="text-slate-400 text-sm">${timeName === timeOfDay ? 'Tria una activitat...' : 'Esperant...'}</p>
+                     `;
+                } else {
+                     slot.innerHTML = `
+                        <h3 class="font-bold">${emoji} ${timeName.charAt(0).toUpperCase() + timeName.slice(1)}</h3>
+                        <p class="font-semibold text-slate-300">${activity.name}</p>
+                        <p class="text-sm font-mono"><span class="text-red-400">-${activity.finalCost.toFixed(2)}</span> | <span class="text-blue-400">+${activity.diversio.toFixed(2)}</span></p>
+                    `;
+                }
+            });
+            document.getElementById(`schedule-${timeOfDay}`)?.classList.add('active');
+        }
+
+        function endGame(isWin) {
+            endGameModal.classList.remove('hidden');
+            endGameModal.classList.add('flex');
+            endGameSummary.innerHTML = '';
+
+            if (!isWin) {
+                endGameTitle.textContent = "Salut Auditiva Esgotada";
+                endGameTitle.className = "text-3xl font-bold text-red-500 text-glow-red";
+                endGameMessage.textContent = `T'has quedat sense salut al Dia ${currentDayIndex + 1}. Has de gestionar millor les activitats sorolloses. La setmana ha acabat abans d'hora.`;
+                
+                // Mostra els dies completats abans de perdre
+                weeklySummary.forEach(day => {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = "text-sm p-2 bg-slate-800 rounded opacity-60";
+                    dayDiv.innerHTML = `<p><strong>Dia ${day.day} (Completat):</strong> ${day.goal}</p>
+                    <p class="font-mono">Balanç final: <span class="text-green-400">${day.budget.toFixed(2)}</span> Salut / <span class="text-blue-400">${day.fun.toFixed(2)}</span> Diversió</p>`;
+                    endGameSummary.appendChild(dayDiv);
+                });
+
+                // Indica el dia en què s'ha perdut
+                const failedDayDiv = document.createElement('div');
+                failedDayDiv.className = "text-sm p-2 bg-red-900/50 rounded border border-red-500";
+                failedDayDiv.innerHTML = `<p><strong>Dia ${currentDayIndex + 1} (No Superat)</strong></p>`;
+                endGameSummary.appendChild(failedDayDiv);
+
+            } else {
+                endGameTitle.textContent = "Setmana Completada!";
+                endGameTitle.className = "text-3xl font-bold text-green-400 text-glow-green";
+                endGameMessage.textContent = "Has completat tots els objectius de la setmana. A continuació, el balanç final de la teva salut i diversió.";
+                
+                weeklySummary.forEach(day => {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = "text-sm p-2 bg-slate-800 rounded";
+                    dayDiv.innerHTML = `<p><strong>Dia ${day.day}:</strong> ${day.goal}</p>
+                    <p class="font-mono">Balanç final: <span class="text-green-400">${day.budget.toFixed(2)}</span> Salut / <span class="text-blue-400">${day.fun.toFixed(2)}</span> Diversió</p>`;
+                    endGameSummary.appendChild(dayDiv);
+                });
+            }
+        }
+
+        startGameButton.addEventListener('click', startGameWeek);
+        continueDayButton.addEventListener('click', () => {
+            dayEndModal.classList.add('hidden');
+            dayEndModal.classList.remove('flex');
+            startDay();
+        });
+        restartButton.addEventListener('click', initGame);
+        
+        initGame();
+    });
+    </script>
+</body>
+</html>
+
+
