@@ -133,6 +133,10 @@
                 <div id="activities-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Les cartes d'activitat es generaran aquí -->
                 </div>
+                 <div id="mindful-mode-container" class="mt-4 p-3 bg-cyan-900/50 border-cyan-500 border rounded-lg flex items-center justify-center space-x-3 hidden">
+                    <input type="checkbox" id="use-mindful-mode" class="h-5 w-5 rounded text-cyan-400 bg-gray-800 border-gray-600 focus:ring-cyan-500">
+                    <label for="use-mindful-mode" class="font-semibold text-cyan-300">Activar "Mode Conscient" (-50% cost, -50% diversió)</label>
+                </div>
             </div>
         </main>
     </div>
@@ -141,7 +145,16 @@
     <div id="instructions-modal" class="modal fixed inset-0 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 max-w-lg w-full text-center p-8 rounded-2xl shadow-2xl space-y-4">
             <h2 class="text-3xl font-bold text-amber-400">Benvingut a Pressupost Auditiu!</h2>
-            <p class="text-slate-400 text-lg">El teu objectiu és sobreviure a una setmana de 5 dies complint un objectiu diari. Gestiona la teva <span class="text-green-400 font-bold">Salut Auditiva</span> per no arribar a zero, i intenta aconseguir el màxim de <span class="text-blue-400 font-bold">Diversió</span> possible. Planifica amb cura! Bona sort.</p>
+            <p class="text-slate-400 text-lg">
+                El teu objectiu és sobreviure a una setmana de 5 dies complint un objectiu diari. Gestiona la teva 
+                <span class="text-green-400 font-bold">Salut Auditiva</span> i la teva 
+                <span class="text-blue-400 font-bold">Diversió</span>.
+            </p>
+            <ul class="text-left text-slate-400 list-disc list-inside space-y-2">
+                <li>Les activitats tranquil·les <span class="text-green-400">recuperen salut</span>.</li>
+                <li>Activa el <span class="text-cyan-300">"Mode Conscient"</span> en activitats sorolloses per reduir el dany a canvi de menys diversió. <strong class="text-amber-400">Només el pots fer servir un cop al dia!</strong></li>
+                <li>Cada nit recuperaràs <span class="text-green-400">+15 de salut</span> pel descans.</li>
+            </ul>
             <button id="start-game-button" class="w-full py-3 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors">Començar Setmana</button>
         </div>
     </div>
@@ -149,7 +162,7 @@
     <div id="day-end-modal" class="modal fixed inset-0 items-center justify-center p-4 hidden">
         <div class="bg-slate-900 border border-slate-700 max-w-lg w-full text-center p-8 rounded-2xl shadow-2xl space-y-4">
             <h2 id="day-end-title" class="text-3xl font-bold text-green-400">Dia Completat!</h2>
-            <p id="day-end-message" class="text-slate-400 text-lg">Les teves orelles han descansat. Has recuperat un <span class="font-bold text-green-400 text-glow-green">+10</span> de salut auditiva. Prepara't per al següent dia!</p>
+            <p id="day-end-message" class="text-slate-400 text-lg">Les teves orelles han descansat. Has recuperat un <span class="font-bold text-green-400 text-glow-green">+15</span> de salut auditiva. Prepara't per al següent dia!</p>
             <button id="continue-day-button" class="w-full py-3 mt-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors">Continuar</button>
         </div>
     </div>
@@ -171,29 +184,29 @@
 
         const allActivities = {
             matí: [
-                { id: 'm1', name: 'Anar a l\'institut en bus', cost: 15, diversio: 5, description: 'El soroll del motor i del trànsit.' },
-                { id: 'm2', name: 'Escoltar música caminant', cost: 20, diversio: 15, description: 'Volum alt per sobre del soroll del carrer.' },
-                { id: 'm3', name: 'Classe tranquil·la', cost: 5, diversio: 2, description: 'Un ambient silenciós i controlat.' },
+                { id: 'm1', name: 'Anar a l\'institut en bus', cost: 15, diversio: 5, description: 'El soroll del motor i del trànsit.', canBeMindful: false },
+                { id: 'm2', name: 'Escoltar música caminant', cost: 20, diversio: 15, description: 'Volum alt per sobre del soroll del carrer.', canBeMindful: true },
+                { id: 'm3', name: 'Classe tranquil·la', cost: 5, diversio: 2, description: 'Un ambient silenciós i controlat.', canBeMindful: false },
             ],
             migdia: [
-                { id: 'd1', name: 'Dinar a la cantina', cost: 15, diversio: 10, description: 'Molta gent parlant alhora.'},
-                { id: 'd2', name: 'Jugar a bàsquet al pati', cost: 10, diversio: 15, description: 'Crits, pilotes i activitat.'},
-                { id: 'd3', name: 'Repassar apunts en silenci', cost: 0, diversio: 1, description: 'Concentració i calma.'},
+                { id: 'd1', name: 'Dinar a la cantina', cost: 15, diversio: 10, description: 'Molta gent parlant alhora.', canBeMindful: false },
+                { id: 'd2', name: 'Jugar a bàsquet al pati', cost: 10, diversio: 15, description: 'Crits, pilotes i activitat.', canBeMindful: false },
+                { id: 'd3', name: 'Repassar apunts en silenci', cost: -5, diversio: 1, description: 'Concentració i calma.', canBeMindful: false },
             ],
             tarda: [
-                { id: 't1', name: 'Assajar amb la banda', cost: 40, diversio: 35, description: 'Volum molt alt i espai tancat.' },
-                { id: 't2', name: 'Jugar a videojocs', cost: 25, diversio: 25, description: 'Explosions i efectes de so forts.' },
-                { id: 't3', name: 'Estudiar per a l\'examen', cost: 0, diversio: 0, description: 'Un merescut descans per les orelles.' },
+                { id: 't1', name: 'Assajar amb la banda', cost: 40, diversio: 35, description: 'Volum molt alt i espai tancat.', canBeMindful: true },
+                { id: 't2', name: 'Jugar a videojocs', cost: 25, diversio: 25, description: 'Explosions i efectes de so forts.', canBeMindful: true },
+                { id: 't3', name: 'Estudiar per a l\'examen', cost: 0, diversio: 0, description: 'Un merescut descans per les orelles.', canBeMindful: false },
             ],
             vespre: [
-                { id: 'v1', name: 'Anar al cinema (estrena)', cost: 35, diversio: 30, description: 'Sistemes de so molt potents.' },
-                { id: 'v2', name: 'Sopar tranquil amb la família', cost: 5, diversio: 10, description: 'Una conversa relaxada.'},
-                { id: 'v3', name: 'Mirar xarxes socials', cost: 15, diversio: 15, description: 'Una estona de desconnexió amb so.' },
+                { id: 'v1', name: 'Anar al cinema (estrena)', cost: 35, diversio: 30, description: 'Sistemes de so molt potents.', canBeMindful: true },
+                { id: 'v2', name: 'Sopar tranquil amb la família', cost: 5, diversio: 10, description: 'Una conversa relaxada.', canBeMindful: false },
+                { id: 'v3', name: 'Mirar xarxes socials', cost: 15, diversio: 15, description: 'Una estona de desconnexió amb so.', canBeMindful: true },
             ],
             nit: [
-                { id: 'n1', name: 'Anar a un concert', cost: 50, diversio: 50, description: 'L\'activitat més sorollosa i perillosa.' },
-                { id: 'n2', name: 'Sortir de festa', cost: 45, diversio: 40, description: 'Música alta durant hores.' },
-                { id: 'n3', name: 'Llegir abans de dormir', cost: 0, diversio: 5, description: 'Relaxació total i silenci.' },
+                { id: 'n1', name: 'Anar a un concert', cost: 50, diversio: 50, description: 'L\'activitat més sorollosa i perillosa.', canBeMindful: true },
+                { id: 'n2', name: 'Sortir de festa', cost: 45, diversio: 40, description: 'Música alta durant hores.', canBeMindful: true },
+                { id: 'n3', name: 'Llegir abans de dormir', cost: -5, diversio: 5, description: 'Relaxació total i silenci.', canBeMindful: false },
             ]
         };
         
@@ -212,6 +225,8 @@
         const startGameButton = document.getElementById('start-game-button');
         const continueDayButton = document.getElementById('continue-day-button');
         const dayEndTitle = document.getElementById('day-end-title');
+        const mindfulModeContainer = document.getElementById('mindful-mode-container');
+        const mindfulModeCheckbox = document.getElementById('use-mindful-mode');
 
         const budgetBar = document.getElementById('budget-bar'), funBar = document.getElementById('fun-bar');
         const budgetPercentage = document.getElementById('budget-percentage'), funPercentage = document.getElementById('fun-percentage');
@@ -221,7 +236,7 @@
         const restartButton = document.getElementById('restart-button'), goalText = document.getElementById('goal-text');
         const currentObjectiveNum = document.getElementById('current-objective-num'), dayCounter = document.getElementById('day-counter');
 
-        let budget, fun, timeOfDay, schedule, currentGoal, shuffledGoals, currentDayIndex, weeklySummary;
+        let budget, fun, timeOfDay, schedule, currentGoal, shuffledGoals, currentDayIndex, weeklySummary, mindfulModeUsedToday;
         
         function initGame() {
             gameContainer.classList.add('hidden');
@@ -242,13 +257,12 @@
             shuffledGoals = [...dailyGoals].sort(() => 0.5 - Math.random());
             weeklySummary = [];
             startDay();
-            endGameModal.classList.add('hidden');
-            endGameModal.classList.remove('flex');
         }
 
         function startDay() {
             timeOfDay = 'matí';
             schedule = { matí: null, migdia: null, tarda: null, vespre: null, nit: null };
+            mindfulModeUsedToday = false; // Reset mindful mode for the new day
             currentGoal = shuffledGoals[currentDayIndex];
             goalText.textContent = currentGoal.text;
             currentObjectiveNum.textContent = currentDayIndex + 1;
@@ -266,32 +280,65 @@
 
             activitiesTitle.textContent = `Activitats de ${timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)}`;
             
+            let showMindfulOption = false;
             activitiesToShow.forEach(activity => {
                 const card = document.createElement('div');
                 card.className = 'activity-card p-4 rounded-lg shadow-md cursor-pointer';
                 if (activity.id === currentGoal.requiredActivityId) card.classList.add('objective-card');
                 
+                let costText = activity.cost > 0
+                    ? `<span class="text-sm font-bold text-red-400 text-glow-red">-${activity.cost.toFixed(0)} Salut</span>`
+                    : `<span class="text-sm font-bold text-green-400 text-glow-green">+${Math.abs(activity.cost).toFixed(0)} Salut</span>`;
+
                 card.innerHTML = `
                     <h4 class="font-bold text-slate-100">${activity.name}</h4>
                     <p class="text-sm text-slate-400">${activity.description}</p>
                     <div class="flex justify-between items-center mt-2 font-mono">
-                        <p class="text-sm font-bold text-red-400 text-glow-red">-${activity.cost.toFixed(0)} Salut</p>
+                        ${costText}
                         <p class="text-sm font-bold text-blue-400 text-glow-blue">+${activity.diversio.toFixed(0)} Diversió</p>
                     </div>
                 `;
                 card.onclick = () => selectActivity(activity);
                 activitiesContainer.appendChild(card);
+                if (activity.canBeMindful) showMindfulOption = true;
             });
+            
+            mindfulModeContainer.classList.toggle('hidden', !showMindfulOption);
+            if(showMindfulOption) {
+                const mindfulModeLabel = document.querySelector('label[for="use-mindful-mode"]');
+                mindfulModeCheckbox.checked = false;
+                mindfulModeCheckbox.disabled = mindfulModeUsedToday;
+                if (mindfulModeUsedToday) {
+                    mindfulModeLabel.textContent = '"Mode Conscient" (Ja utilitzat avui)';
+                    mindfulModeContainer.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    mindfulModeLabel.textContent = 'Activar "Mode Conscient" (-50% cost, -50% diversió)';
+                    mindfulModeContainer.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
         }
         
         function selectActivity(activity) {
-            if (budget - activity.cost < 0) {
+            let currentCost = activity.cost;
+            let currentFun = activity.diversio;
+            let usedMindfulMode = false;
+
+            if (activity.canBeMindful && mindfulModeCheckbox.checked && !mindfulModeUsedToday) {
+                currentCost = Math.round(currentCost * 0.5);
+                currentFun = Math.round(currentFun * 0.5);
+                usedMindfulMode = true;
+                mindfulModeUsedToday = true;
+            }
+
+            budget = Math.min(100, budget - currentCost);
+
+            if (budget <= 0) {
                  endGame(false);
                  return;
             }
-            budget -= activity.cost;
-            fun += activity.diversio;
-            schedule[timeOfDay] = { ...activity, finalCost: activity.cost };
+
+            fun += currentFun;
+            schedule[timeOfDay] = { ...activity, finalCost: currentCost, finalFun: currentFun, usedMindfulMode };
             progressDay();
         }
 
@@ -313,7 +360,7 @@
         }
         
         function showDayEndPopup() {
-            budget = Math.min(100, budget + 10);
+            budget = Math.min(100, budget + 15);
             dayEndTitle.textContent = `Fi del Dia ${currentDayIndex}`;
             dayEndModal.classList.remove('hidden');
             dayEndModal.classList.add('flex');
@@ -355,7 +402,7 @@
                      slot.innerHTML = `
                         <h3 class="font-bold">${emoji} ${timeName.charAt(0).toUpperCase() + timeName.slice(1)}</h3>
                         <p class="font-semibold text-slate-300">${activity.name}</p>
-                        <p class="text-sm font-mono"><span class="text-red-400">-${activity.finalCost.toFixed(2)}</span> | <span class="text-blue-400">+${activity.diversio.toFixed(2)}</span></p>
+                        <p class="text-sm font-mono"><span class="text-red-400">-${activity.finalCost.toFixed(2)}</span> | <span class="text-blue-400">+${activity.finalFun.toFixed(2)}</span></p>
                     `;
                 }
             });
@@ -370,9 +417,8 @@
             if (!isWin) {
                 endGameTitle.textContent = "Salut Auditiva Esgotada";
                 endGameTitle.className = "text-3xl font-bold text-red-500 text-glow-red";
-                endGameMessage.textContent = `T'has quedat sense salut al Dia ${currentDayIndex + 1}. Has de gestionar millor les activitats sorolloses. La setmana ha acabat abans d'hora.`;
+                endGameMessage.textContent = `T'has quedat without salut al Dia ${currentDayIndex + 1}. Has de gestionar millor les activitats sorolloses. La setmana ha acabat abans d'hora.`;
                 
-                // Mostra els dies completats abans de perdre
                 weeklySummary.forEach(day => {
                     const dayDiv = document.createElement('div');
                     dayDiv.className = "text-sm p-2 bg-slate-800 rounded opacity-60";
@@ -381,7 +427,6 @@
                     endGameSummary.appendChild(dayDiv);
                 });
 
-                // Indica el dia en què s'ha perdut
                 const failedDayDiv = document.createElement('div');
                 failedDayDiv.className = "text-sm p-2 bg-red-900/50 rounded border border-red-500";
                 failedDayDiv.innerHTML = `<p><strong>Dia ${currentDayIndex + 1} (No Superat)</strong></p>`;
@@ -415,5 +460,4 @@
     </script>
 </body>
 </html>
-
 
